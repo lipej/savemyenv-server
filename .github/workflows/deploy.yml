@@ -34,7 +34,7 @@ jobs:
         run: echo ${{ secrets.DEPLOY_PORT }} >> ./build/.env
 
       - name: Deploy
-        uses: easingthemes/ssh-deploy@v2.1.4
+        uses: easingthemes/ssh-deploy@main
         env:
           SSH_PRIVATE_KEY: ${{ secrets.DEPLOYKEY }}
           REMOTE_HOST: ${{ secrets.DEPLOY_HOST }}
