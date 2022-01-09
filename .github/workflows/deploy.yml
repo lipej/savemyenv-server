@@ -1,31 +1,46 @@
-name: 'Deploy to Server'
+name: Deploy to Oracle
 
 on:
   workflow_dispatch:
+
 jobs:
-  build:
+  deploy:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@master
-      - name: 'Build deployment code for standalone'
+   	  - uses: actions/checkout@v2
+
+      - uses: actions/setup-node@v1
+        with:
+          node-version: '14.x'
+
+      - name: Cache .pnpm-store
+        uses: actions/cache@v1
+        with:
+          path: ~/.pnpm-store
+          key: ${{ runner.os }}-node${{ matrix.node-version }}-${{ hashFiles('**/pnpm-lock.yaml') }}
+
+      - name: Install pnpm
+        run: curl -f https://get.pnpm.io/v6.16.js | node - add --global pnpm@6
+
+      - name: Install dependencies
+        run: pnpm install
+
+      - name: Prisma generate
+        run: pnpm exec prisma generate
+
+      - name: Build
+        run: pnpm build
+
+      - name: Copy env
+        run: ${{ secrets.DEPLOY_PORT }} >> /build/.env
+
+      - name: Deploy
+        uses: easingthemes/ssh-deploy@v2.1.4
         env:
-          remote_host: ${{ secrets.DEPLOY_HOST }}
-          remote_port: ${{ secrets.DEPLOY_PORT }}
-          remote_user: ${{ secrets.DEPLOY_USER }}
-          remote_key: ${{ secrets.DEPLOY_KEY }}
-          dev_env_file: ${{ secrets.DEV_ENV_FILE }}
-          local_dir: 'build/'
-          remote_dir: '/var/api'
-        run: |
-          npm i -g pnpm
-          pnpm install
-          CI=false pnpm run build
-          mkdir ~/.ssh
-          echo "$remote_key" > ~/.ssh/id_github
-          chmod 600 ~/.ssh/id_github
-          echo "$dev_env_file" > .env
-          chmod 600 .env
-          rsync -avzr --delete -e "ssh -p ${remote_port} -i ~/.ssh/id_github -o StrictHostKeyChecking=no" ${local_dir} ${remote_user}@${remote_host}:${remote_dir}
-          rm ~/.ssh/id_github
-          pnpm run start
+          SSH_PRIVATE_KEY: ${{ secrets.DEPLOYKEY }}
+          REMOTE_HOST: ${{ secrets.DEPLOY_HOST }}
+          REMOTE_USER: ${{ secrets.DEPLOY_USER }}
+          REMOTE_PORT: ${{ secrets.DEPLOY_PORT }}
+          SOURCE: "build/"
+          TARGET: ${{ secrets.DEPLOY_TARGET }}
