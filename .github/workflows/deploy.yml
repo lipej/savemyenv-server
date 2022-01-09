@@ -31,7 +31,7 @@ jobs:
         run: pnpm build
 
       - name: Copy env
-        run: echo ${{ secrets.DEPLOY_PORT }} >> ./build/.env
+        run: echo ${{ secrets.DEVENVFILE }} >> ./build/.env
 
       - name: Deploy
         uses: easingthemes/ssh-deploy@main
