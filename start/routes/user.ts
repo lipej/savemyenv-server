@@ -20,7 +20,7 @@ Route.post('/api/v1/register', async ({ response, request }) => {
 
     response.created({ success: true })
   } catch (e) {
-    console.log(e)
+    console.error(e)
     response.internalServerError()
   }
 })

@@ -44,7 +44,7 @@ export default class AuthController {
   public async verifyToken({ response, request }: AuthCtx) {
     const body = request.body() as ModifiedBody
 
-    const user = await this.loader.load(body.userId)
+    const user = await this.loader.loadById(body.userId)
 
     if (!user) response.unauthorized({ message: 'Error: Invalid token' })
 
